@@ -44,16 +44,19 @@
 \rhead{SeisTracer Package Manual}
 \lhead{Caio Ciardelli}
 \rfoot{Page \thepage\ of \pageref{LastPage}}
+\setlength{\headheight}{15pt}
 \title{SeisTracer Package Manual}
 \author{Caio Ciardelli \\ Northwestern University \\ Under the supervision of Prof. Suzan van der Lee}
-\date{December 19, 2025}
+\date{\today}
 \begin{document}
 \maketitle
 \tableofcontents
 \newpage
+
 \section{Introduction}
 The SeisTracer Package is a geosciences software package developed for computing seismic ray paths and travel times in 1D spherical Earth models. It employs dense precomputed tables, the Newton-Raphson method, and analytical expressions for distances and travel times, without relying on Earth-flattening transformations. The package supports a wide range of seismic phases, including teleseismic, core, diffracted, and higher-order phases, with options for amplitude computations and visualizations. Written in Python and C, it is designed for efficient forward modeling of seismic wave propagation.
 Key features:
+
 \begin{itemize}
     \item Load and plot 1D velocity models (Vp, Vs, density vs. depth).
     \item Precompute tables of ray parameters and distances for models and depths.
@@ -63,10 +66,13 @@ Key features:
     \item Generate and plot travel-time curves.
     \item Compute and plot amplitude coefficients at discontinuities.
 \end{itemize}
+
 This manual provides a comprehensive guide to installing, compiling, running, and understanding the package. It includes details on the directory structure, dependencies, key scripts and programs, input/output files, and usage examples.
 The program is licensed under the GNU General Public License (GPL) version 3 or later. See the LICENSE file for details.
+
 \section{Dependencies}
 The SeisTracer Package requires the following software and libraries:
+
 \begin{itemize}
     \item \textbf{Bash}: For running shell scripts (e.g., create\_tables.bash).
     \item \textbf{GCC}: C compiler for building the C binaries and shared libraries (tables.c, tracer.c, etc.).
@@ -81,38 +87,54 @@ The SeisTracer Package requires the following software and libraries:
         \end{itemize}
     \item \textbf{Make}: For compiling via Makefile.
 \end{itemize}
+
 Ensure all dependencies are installed on your system. For Python libraries, use pip:
+
 \begin{lstlisting}[language=Bash]
 pip install numpy scipy matplotlib
 \end{lstlisting}
+
 The package assumes access to predefined models in models/ directory.
+
 \section{Installation and Compilation}
 Clone the repository and navigate to the root directory.
 \subsection{Compilation}
 The package uses a Makefile for compilation. To build the C shared libraries (libcoefficients.so, libio.so, libtracer.so) and binaries (tables):
+
 \begin{lstlisting}[language=Bash]
 make all
 \end{lstlisting}
-This compiles the source files in src/ (using headers from src/headers and shared code from src/shared) and places the libraries in lib/ and executables in bin/. 
+
+This compiles the source files in src/ (using headers from src/headers and shared code from src/shared) and places the libraries in lib/ and executables in bin/.
 To clean previous build artifacts:
+
 \begin{lstlisting}[language=Bash]
 make clean
 \end{lstlisting}
+
 Note: Ensure GCC is in your PATH. The Makefile assumes standard includes; modify it if needed for custom library paths.
+
 \subsection{Setup Python Path}
 After compilation, add the package directory to PYTHONPATH to import the module:
+
 \begin{lstlisting}[language=Bash]
 export PYTHONPATH="$HOME/git/seistracer"
 \end{lstlisting}
+
 Add this to your \~/.bashrc or \~/.zshrc for persistence.
+
 \subsection{Build Precomputed Tables}
 After compilation, build tables for all provided models:
+
 \begin{lstlisting}[language=Bash]
 ./create_tables.bash ak135f iasp91 prem rem1d stw105
 \end{lstlisting}
+
 This process generates tables in the directory tables/MODEL/ for depths ranging from 0 to 700~km in 1~km increments for each specified model. The tables for a single model require approximately 9~GB of disk space and may take several hours to compute, depending on the machine's performance. However, they need to be generated only once, after which SeisTracer can efficiently compute a large number of ray paths.
+
 \section{Directory Structure}
 The package is organized as follows:
+
 \dirtree{%
 .1 seistracer.
 .2 create\_tables.bash.
@@ -161,7 +183,9 @@ The package is organized as follows:
 .3 rem1d.
 .3 stw105.
 }
+
 Key directories:
+
 \begin{itemize}
     \item \textbf{docs}: Contains example usage scripts (example.py).
     \item \textbf{models}: Predefined 1D Earth models (e.g., iasp91.model) in text format.
@@ -169,35 +193,46 @@ Key directories:
     \item \textbf{src}: C source code, including main programs (tables.c, tracer.c), headers, and shared utilities for amplitudes, ray tracing, etc.
     \item \textbf{tables}: Precomputed tables for models (e.g., codes\_0.list, phases\_0.list, table\_0.bin per depth and model).
 \end{itemize}
+
 \section{Running the Program}
 After building tables, use the Python module for computations. Import seistracer and create a Tracer object with a model. The module handles phase calculations, visualizations, and more.
 Key usage examples are provided in Section 7 and docs/example.py.
+
 \section{Key Components and Usage}
 \subsection{create\_tables.bash}
 This Bash script builds precomputed tables for specified models across depths 0 to 700 km using the tables binary.
+
 Usage:
+
 \begin{lstlisting}[language=Bash]
 ./create_tables.bash MODEL1 [MODEL2 ...]
 \end{lstlisting}
+
 Example:
+
 \begin{lstlisting}[language=Bash]
 ./create_tables.bash ak135f iasp91 prem rem1d stw105
 \end{lstlisting}
+
 Output: In tables/MODEL/: codes\_DEPTH.list (permutation codes), phases\_DEPTH.list (phase names and counts), table\_DEPTH.bin (binary blocks with np, index, delta, psph) for each depth.
 Notes: Runs in parallel for depth ranges; progress messages.
+
 \subsection{seistracer.py}
 Core Python module; loads models/tables via ctypes, computes paths/times/amplitudes.
 Classes:
+
 \begin{itemize}
     \item Constants: Exports C constants (e.g., MAX\_PHASES).
     \item Phases: Manages phase data; methods: \_\_str\_\_ (list phases), getInfo (print info), getDict (dict of ttime/take-off/etc.), getPath (ray paths), plotPath (visualize paths).
     \item Tracer: Main class; loads model, plots model/coefficients, computes coefficients, ttimesAndPaths (returns Phases), getTravelTimes (dict), plotTravelTimes (curves).
 \end{itemize}
+
 \subsection{tables.c (bin/tables)}
 Generates tables; precomputes coefficients, permutations, sorts by delta.
 Usage: ./bin/tables DEPTH MODEL (called by create\_tables.bash).
 Output: As above.
 Notes: Uses Newton-Raphson for solutions; analytical integrals.
+
 \subsection{tracer.c (lib/libtracer.so)}
 Computes ttimes/paths from tables; uses heapsort for ordering.
 Functions: ttimesAndPaths (core; computes times/paths).
@@ -205,7 +240,6 @@ Notes: Adjusts delta; interpolates psph; computes/rescales paths.
 
 \section{Examples}
 The docs/example.py script demonstrates various features of the SeisTracer package. Below, we provide the full code with detailed explanations preceding each key section, describing what the code does and why it's useful.
-
 Import the SeisTracer module. This makes all classes and functions available for use, such as Tracer for model loading and phase computations.
 
 \begin{lstlisting}[language=Python]
@@ -223,6 +257,13 @@ Plot the loaded velocity model. This generates a figure showing P-wave velocity 
 \begin{lstlisting}[language=Python]
 tracer.plotModel()
 \end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/IASP91.png}
+  \caption{The IASP91 Earth model displaying compressional wave velocity $\alpha$ (red), shear wave velocity $\beta$ (blue), and density $\rho$ (green) as functions of depth, with key discontinuities including the Moho, 410 km, 660 km, Core-Mantle Boundary (CMB), and Inner Core Boundary (ICB) marked.}
+  \label{fig:iasp91}
+\end{figure}
 
 Compute travel times and ray paths for phases 'P' and 'S' at source depth 0 km and epicentral distance (delta) 20~$^{\circ}$. The ttimesAndPaths method returns a Phases object containing computed arrivals. Specifying phases limits computations to those; default is 'all'.
 
@@ -242,6 +283,13 @@ Plot the ray paths for all computed phases. The plotPath method visualizes paths
 phases.plotPath()
 \end{lstlisting}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Regional_Ray_Paths.png}
+  \caption{Ray paths for regional P (red) and S (blue) seismic phases from a surface source at an epicentral distance of 20°, illustrated in a cross-section of the Earth with discontinuity boundaries shown as concentric circles.}
+  \label{fig:regional_ray_paths}
+\end{figure}
+
 Plot travel-time curves for default phases (`P' and `S'). The plotTravelTimes method generates curves of travel time (minutes) vs. delta (degrees), useful for understanding phase arrivals over distances.
 
 \begin{lstlisting}[language=Python]
@@ -253,6 +301,13 @@ Compute diffracted phases `Pdiff' and `Sdiff' at delta 150~$^{\circ}$. Demonstra
 \begin{lstlisting}[language=Python]
 phases = tracer.ttimesAndPaths(source_depth=0, delta=150, phases=['Pdiff', 'Sdiff'])
 \end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Diffraced_P_and_S_Rays.png}
+  \caption{Ray paths for diffracted Pdiff (red) and Sdiff (blue) phases at an epicentral distance of 150°, showing waves grazing along the Core-Mantle Boundary (CMB) in the Earth's cross-section.}
+  \label{fig:diffracted_p_and_s_rays}
+\end{figure}
 
 Plot travel-time curves including diffracted phases. Specifies phases to include both direct and diffracted for comparison.
 
@@ -267,11 +322,25 @@ tracer.plotTravelTimes(phases=['PP', 'SS', 'PS', 'PKP', 'SKP', 'SKKS',
                                'PKIKP', 'PKIKS', 'PKJKP', 'SKS660t+P'])
 \end{lstlisting}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Travel_Time_Curves.png}
+  \caption{Travel-time curves for multiple seismic phases including PP (blue), SS (orange), PS (green), PKP (red), SKP (purple), SKKS (brown), PKIKP (pink), PKIKS (gray), PKJKP (yellow), and SKS660t+P (cyan) as functions of epicentral distance Delta (°).}
+  \label{fig:travel_time_curves}
+\end{figure}
+
 Plot amplitude coefficients at all discontinuities. Visualizes amplitude and energy flux vs. incidence angle for reflections/transmissions at each interface (e.g., surface, Moho).
 
 \begin{lstlisting}[language=Python]
 tracer.plotAmplitudeCoefficients(discontinuities='all')
 \end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Amplitude_Coefficients_ICB.png}
+  \caption{Normalized amplitude coefficients (left) and energy flux (right) at the Inner Core Boundary (ICB) versus angle of incidence, with curves for PdPd (blue), PdSvd (orange), PdPu (green), PdSvu (red), and total (black).}
+  \label{fig:amplitude_coefficients_icb}
+\end{figure}
 
 Compute specific phases `P', `P410-P', and `SKS660t+P' at delta 98~$^{\circ}$, demonstrating phase naming for reflections and conversions.
 
@@ -299,6 +368,13 @@ phases = tracer.ttimesAndPaths(source_depth=480, delta=140, arc='both',
                                compute_amplitudes=True)
 \end{lstlisting}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/All_Ray_Paths.png}
+  \caption{All available ray paths for seismic phases at a source depth of 20 km and epicentral distance of 150°, illustrating a dense network of wave propagations through the Earth's layers with color-coded branches.}
+  \label{fig:all_ray_paths}
+\end{figure}
+
 Print info for selected phases from the computed set.
 
 \begin{lstlisting}[language=Python]
@@ -325,12 +401,26 @@ phases.plotPath(['PKIIKP', 'PKP660t+SScP', 'PKJKS',
                  'pPmt-ScSScS', 'P410-ScSScS', 'sSKIKPPm+P'])
 \end{lstlisting}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Selected_Ray_Paths.png}
+  \caption{Selected ray paths for complex seismic phases including PKIIKP, PKP660t+SScP, PKJKS, SPS660-S, ScSScS660-ScS\_M, pPKJKS, pPmt-ScSScS, P410-ScSScS, and sSKIKPPm+P, color-coded by branch type (P red, S blue, K orange, J purple, I green) in the Earth's cross-section.}
+  \label{fig:selected_ray_paths}
+\end{figure}
+
 Compute minor-arc phases including higher-order multiples up to 2 loops (e.g., for long-distance multiples).
 
 \begin{lstlisting}[language=Python]
 phases = tracer.ttimesAndPaths(source_depth=480, delta=140, arc='minor',
                                min_loop=0, max_loop=2)
 \end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/Higher_Order_Ray_Paths.png}
+  \caption{Higher-order ray paths for seismic phases with up to 2 loops in the minor arc at a source depth of 480 km and epicentral distance of 140°, displaying multiple reflections and conversions in the Earth's interior.}
+  \label{fig:higher_order_ray_paths}
+\end{figure}
 
 Compute all available phases at depth 20~km and delta 150~$^{\circ}$.
 
