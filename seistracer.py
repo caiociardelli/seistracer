@@ -1458,9 +1458,9 @@ class Tracer (object):
         axs[0].set_xlim (0, 90)
         axs[1].set_xlim (0, 90)
         # Set labels
-        axs[0].set_xlabel (r'Angle of incidence ($\circ$)',
+        axs[0].set_xlabel (r'Angle of incidence [$\circ$]',
                            fontsize = 12)
-        axs[1].set_xlabel (r'Angle of incidence ($\circ$)',
+        axs[1].set_xlabel (r'Angle of incidence [$\circ$]',
                            fontsize = 12)
         # Add legend
         axs[1].legend (fontsize = 12)
@@ -2253,11 +2253,11 @@ class Tracer (object):
                 label = phase)
 
     # Set ticks
-    plt.tick_params (axis = 'x', labelsize = 12)
-    plt.tick_params (axis = 'y', labelsize = 12)
+    plt.tick_params (axis = 'x', labelsize = 16)
+    plt.tick_params (axis = 'y', labelsize = 16)
     # Set labels
-    plt.ylabel ('Travel Time [minutes]', fontsize = 12)
-    plt.xlabel ('Delta [°]', fontsize = 12)
+    plt.ylabel ('Travel Time [minutes]', fontsize = 16)
+    plt.xlabel (r'Delta [$\circ$]', fontsize = 16)
     # Set limits
     plt.xlim (0, None)
     plt.ylim (0, None)
@@ -2266,6 +2266,6 @@ class Tracer (object):
     # Add legend
     plt.legend (fontsize = 12)
     # Set title
-    plt.title ('Travel-Time Curves', fontsize = 15, y = 1.02)
+    plt.title ('Travel-Time Curves', fontsize = 20, y = 1.02)
     plt.tight_layout ()
     plt.show ()

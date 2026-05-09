@@ -14,6 +14,17 @@
 \usepackage{lastpage}
 \usepackage{float}
 \usepackage{verbatim}
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  sorting=nyt,
+  maxcitenames=2,
+  mincitenames=1,
+  uniquename=false, % avoid over-disambiguation by names
+  uniquelist=false, % avoid expanding et al. to disambiguate
+  dashed=false      % <-- disables '—' for repeated authors
+]{biblatex}
+\addbibresource{references.bib}
 \geometry{margin=1in}
 \lstset{
   backgroundcolor=\color{white},
@@ -427,6 +438,31 @@ Compute all available phases at depth 20~km and delta 150~$^{\circ}$.
 \begin{lstlisting}[language=Python]
 phases = tracer.ttimesAndPaths(source_depth=20, delta=150)
 \end{lstlisting}
+
+\section{Phase naming convention}
+
+The standard IASPEI phase list \parencite{Storchak2003,Storchak2011} is insufficient to uniquely label all the paths produced by the binary-tree algorithm of \texttt{SeisTracer}, particularly when uncommon mode conversions, deep multiples, and repeated core legs are included. The package therefore implements a flexible naming convention that follows the IASPEI standard where applicable and extends it as needed. The convention is summarized below.
+
+Each ray path is internally represented as a sequence of the propagation-leg keys Pu, Pd, Su, and Sd. These keys are mapped automatically to the standard phase letters
+\begin{itemize}
+  \item P/p for compressional waves in the mantle (and the mantle leg of a teleseismic phase),
+  \item S/s for shear waves in the mantle,
+  \item K for the outer core (compressional),
+  \item I for the inner core (compressional),
+  \item J for the inner core (shear).
+\end{itemize}
+The first letter is written in lowercase (p or s) when the initial leg leaves the source upgoing, and uppercase (P or S) otherwise.
+
+Discontinuity labels are appended to indicate the location of reflections and conversions: m for the Moho, 410 and 660 for the upper-mantle discontinuities, c for the CMB, and i for the ICB. Two additional symbols qualify the interaction at a discontinuity:
+\begin{itemize}
+  \item ``+'' indicates a reflection from the inner side of the discontinuity (i.e., the wave approaches from below);
+  \item ``-'' indicates a reflection from the outer side (the wave approaches from above);
+  \item ``t'' indicates a wave that undergoes a mode conversion during transmission through the discontinuity rather than a reflection at it.
+\end{itemize}
+
+When both minor- and major-arc phases are requested, the suffixes ``\_m'' and ``\_M'' disambiguate them.
+
+As an example, the phase \texttt{PSP410t-S} corresponds to a ray that leaves the source as a downgoing P wave, reflects at the surface as an S wave, reflects again at the surface converting back to P, and finally undergoes a mode conversion to S during transmission through the 410-km discontinuity before arriving at the receiver. The convention provides a compact yet unambiguous description of even the most complex ray paths produced by \texttt{SeisTracer}.
 
 For contributions or issues, contact the author.
 \end{document}

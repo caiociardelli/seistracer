@@ -68,8 +68,8 @@ if __name__ == '__main__':
 
   print ('\nPlotting travel-time curves for multiple phases...')
 
-  tracer.plotTravelTimes (phases = ['PP', 'SS', 'PS', 'PKP','SKP', 'SKKS',
-                                    'PKIKP', 'PKIKS', 'PKJKP', 'SKS660t+P'])
+  tracer.plotTravelTimes (phases = ['PP', 'SS', 'Pdiff', 'Sdiff', 'PS', 'SKP', 
+                                    'SKKS', 'PKIKP', 'PKJKP', 'SKS660t+P'])
 
   print ("\nPlotting amplitude coefficients for all discontinuities...")
 
