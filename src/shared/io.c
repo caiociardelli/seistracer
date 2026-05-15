@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <locale.h>
 #include "constants.h"
 #include "constants_export.h"
 
@@ -75,6 +76,9 @@ int readModel (int *ni, int nl,
   FILE *file = fopen (model, "r");
 
   if (file == NULL) return 1;
+
+  /* Force C locale so that '.' is used as decimal separator */
+  setlocale(LC_NUMERIC, "C");
 
   /* Skip header lines */
   if (fscanf (file, "%*[^\n]\n") != 0) return 2;
