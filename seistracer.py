@@ -2216,16 +2216,26 @@ class Tracer (object):
         # Valid mask
         valid_mask = ~np.isnan (y)
 
-        if np.any (valid_mask):
+        if np.count_nonzero (valid_mask) > 1:
 
-          # Fill missing values by interpolating against dT_dD (single-valued)
+          # Fill missing values by interpolating against dT_dD (single-valued),
+          # but only near valid points: filling across a branch junction in
+          # dT_dD would extrapolate garbage, so those NaNs are kept
+          spacing = np.diff (np.sort (p[valid_mask]))
+          spacing = spacing[spacing > 0]
+          gap_lim = 30.0 * np.median (spacing) if spacing.size else 1.0
+
           interpolator = interp1d (p[valid_mask], y[valid_mask],
                                    kind = 'linear',
                                    fill_value = 'extrapolate')
 
-          y[np.isnan (y)] = interpolator (p)[np.isnan (y)]
+          for k in np.where (np.isnan (y))[0]:
 
-        else:
+            if np.min (np.abs (p[valid_mask] - p[k])) <= gap_lim:
+
+              y[k] = interpolator (p[k])
+
+        elif not np.any (valid_mask):
 
           # Set to None if all nan
           y[:] = None
