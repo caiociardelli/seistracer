@@ -2159,25 +2159,25 @@ class Tracer (object):
           # Ignore warnings
           warnings.simplefilter ('ignore')
 
-          # Set default arc
-          arc = 'minor'
-          proper_delta = delta
+          # Recover this row's arc and loop from its total distance
+          d0   = delta % 360.0
+          loop = int (delta // 360.0)
 
-          while proper_delta >= 360.0:
-            # Adjust delta
-            proper_delta -= 360.0
+          if d0 <= 180.0:
 
-          if proper_delta > 180.0: 
-             
-            # Set major arc
+            arc = 'minor'
+            proper_delta = d0
+
+          else:
+
             arc = 'major'
-            proper_delta = 360.0 - delta
+            proper_delta = 360.0 - d0
 
           # Compute arrivals
           arrivals = self.ttimesAndPaths (source_depth = source_depth,
                                           delta = proper_delta,
                                           phases = [phase], arc = arc,
-                                          min_loop = 0, max_loop = 3)
+                                          min_loop = loop, max_loop = loop)
           arrivals_dict = arrivals.getDict ()
 
           for arrival in arrivals_dict[phase]:
@@ -2210,30 +2210,59 @@ class Tracer (object):
         sort_idx = np.argsort (arrays[2])
         sorted_arrays = arrays[:, sort_idx]
 
-        x = sorted_arrays[0]
         y = sorted_arrays[1]
-       
+        p = sorted_arrays[2]
+
         # Valid mask
         valid_mask = ~np.isnan (y)
 
         if np.any (valid_mask):
 
-          # Interpolate missing
-          interpolator = interp1d (x[valid_mask], y[valid_mask],
+          # Fill missing values by interpolating against dT_dD (single-valued)
+          interpolator = interp1d (p[valid_mask], y[valid_mask],
                                    kind = 'linear',
                                    fill_value = 'extrapolate')
-        
-          y[np.isnan (y)] = interpolator (x)[np.isnan (y)]
-        
+
+          y[np.isnan (y)] = interpolator (p)[np.isnan (y)]
+
         else:
 
           # Set to None if all nan
           y[:] = None
 
-        # Assign sorted lists
-        ttimes[phase]['deltas'] = sorted_arrays[0].tolist ()
-        ttimes[phase]['ttimes'] = sorted_arrays[1].tolist ()
-        ttimes[phase]['dT_dD']  = sorted_arrays[2].tolist ()
+        # Break disjoint branches (negative-slope segments) so they are not
+        # joined by a line; run after interpolation so breaks are not filled
+        dl = sorted_arrays[0]
+        tm = sorted_arrays[1]
+        pr = sorted_arrays[2]
+
+        step_min  = 0.05
+        slope_tol = -0.01
+
+        broken_d = [dl[0]]
+        broken_t = [tm[0]]
+        broken_p = [pr[0]]
+
+        for k in range (1, dl.size):
+
+          ddelta = dl[k] - dl[k - 1]
+          dttime = tm[k] - tm[k - 1]
+
+          if (abs (ddelta) >= step_min and np.isfinite (dttime) and
+              dttime / ddelta < slope_tol):
+
+            broken_d.append (np.nan)
+            broken_t.append (np.nan)
+            broken_p.append (np.nan)
+
+          broken_d.append (dl[k])
+          broken_t.append (tm[k])
+          broken_p.append (pr[k])
+
+        # Assign sorted lists (with branch breaks)
+        ttimes[phase]['deltas'] = broken_d
+        ttimes[phase]['ttimes'] = broken_t
+        ttimes[phase]['dT_dD']  = broken_p
 
     return ttimes
 
